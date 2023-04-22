@@ -6,16 +6,20 @@ use near_sdk::{
     env, near_bindgen, Balance, Gas, PanicOnDefault, Promise, AccountId, log, PromiseError
 };
 
+mod utils;
+
 const NEAR_PER_STORAGE: Balance = 10_000_000_000_000_000_000; // 10e18yⓃ
-const CREATE_ACCOUNT_GAS: Gas = Gas(150_000_000_000_000); // 150 TGas
-const INITIATE_ACCOUNT_GAS: Gas = Gas(15_000_000_000_000); // 15 TGas
-const CALLBACK_GAS: Gas = Gas(15_000_000_000_000); // 15 TGas
+const CREATE_ACCOUNT_GAS: Gas = Gas(120_000_000_000_000); // 120 TGas
+const INITIATE_ACCOUNT_GAS: Gas = Gas(20_000_000_000_000); // 20 TGas
+const CALLBACK_GAS: Gas = Gas(20_000_000_000_000); // 20 TGas
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct LittleLinkFactory {
     littlelink_contract_by_creator: LookupMap<AccountId, AccountId>,
-    code: Vec<u8>
+    code: Option<Vec<u8>>,
+    owner_id: AccountId,
+    ipfs: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
@@ -23,28 +27,47 @@ pub struct LittleLinkFactory {
 pub struct PageArgs {
     title: String,
     description: String,
-    github: Option<String>,
-    twitter: Option<String>,
-    medium: Option<String>,
-    telegram: Option<String>,
+    links: Vec<LinkItem>
 }
 
 #[derive(Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 #[serde(crate = "near_sdk::serde")]
-pub struct Args {
-    data: PageArgs
+pub struct LinkItem {
+    text: String,
+    path: String,
+    r#type: i32 // represent link_type enum
 }
 
 #[near_bindgen]
 impl LittleLinkFactory {
     #[init]
     pub fn new() -> Self {
-        let code = env::input().expect("No code provided");
+        let owner = env::predecessor_account_id();
 
         Self {
             littlelink_contract_by_creator: LookupMap::new(b"c"),
-            code: code.to_vec()
+            owner_id: owner,
+            ipfs: None,
+            code: None
         }
+    }
+    
+    fn assert_owner(&self) {
+        utils::assert_condition(self.owner_id == env::predecessor_account_id(), "This method can be accessed only by the owner");
+    }
+
+    pub fn set_code(&mut self) {
+        self.assert_owner();
+
+        let code = env::input().expect("No code provided");
+
+        self.code = Some(code.to_vec());
+    }
+
+    pub fn set_ipfs(&mut self, ipfs: String) {
+        self.assert_owner();
+
+        self.ipfs = Some(ipfs);
     }
 
     pub fn get_registered_contract_by_creator(&self, creator_id: AccountId) -> Option<AccountId> {
@@ -56,7 +79,7 @@ impl LittleLinkFactory {
     }
 
     #[payable]
-    pub fn create_web4_little_link_page(&mut self, args: Args, pub_key: String) -> Promise {
+    pub fn create_web4_little_link_page(&mut self, page_data: PageArgs, pub_key: String) -> Promise {
         let index = env::current_account_id().to_owned().to_string().rfind('.').unwrap();
         let network_slice = &env::current_account_id().to_owned().to_string()[(index + 1)..];
         let network = network_slice.to_owned();
@@ -68,7 +91,10 @@ impl LittleLinkFactory {
             "LittleLink contract is already registered for you"
         );
 
-        let minimum_needed = NEAR_PER_STORAGE * self.code.len() as u128;
+        let code = self.code.clone().expect("No code found, owner must provide this");
+        let ipfs = self.ipfs.clone().expect("No IPFS gateway found, owner must provide this");
+
+        let minimum_needed = NEAR_PER_STORAGE * code.len() as u128 + 350_000_000_000_000_000_000_000;
 
         assert!(
             env::attached_deposit() >= minimum_needed,
@@ -87,21 +113,21 @@ impl LittleLinkFactory {
         
         let create_account_args = json!({"new_account_id": web4_contract_id.clone(), "options": {
             "full_access_keys": [&pub_key.clone()],
-            "contract_bytes": &self.code,
+            "contract_bytes": &code,
         }}).to_string().into_bytes();
         
         let create_account_promise = Promise::new(network.clone().try_into().unwrap()).function_call(
             "create_account_advanced".to_string(),
-            create_account_args, minimum_needed + 100_000_000_000_000_000_000_000, CREATE_ACCOUNT_GAS
+            create_account_args, minimum_needed, CREATE_ACCOUNT_GAS
         );
         
         let initiate_contract_args = json!({
-            "data": args.data,
-            "ipfs": "ipfs://bafybeihiw6mwe63nvy6it7sialrr3fgx57jqnfdqlpxg7do6fytbxnzmna",
+            "data": page_data,
+            "ipfs": &ipfs,
             "owner_id": creator_id.clone().to_owned()
         }).to_string().into_bytes();
         
-        let initiate_contract_promise = Promise::new(web4_contract_id.clone().try_into().unwrap()).function_call("new".to_string(), initiate_contract_args, 0, INITIATE_ACCOUNT_GAS);
+        let initiate_contract_promise = Promise::new(web4_contract_id.clone().try_into().unwrap()).function_call("init".to_string(), initiate_contract_args, 0, INITIATE_ACCOUNT_GAS);
 
         create_account_promise.then(initiate_contract_promise).then(
                 Self::ext(env::current_account_id()).with_static_gas(CALLBACK_GAS).create_web4_little_link_page_callback(
@@ -126,7 +152,7 @@ impl LittleLinkFactory {
         };
 
         log!(format!(
-            "Error creating {web4_contract_id}, refunding deposit & removing from contracts map"
+            "Error creating {web4_contract_id} - refunding deposit & removing from contracts map"
         ));
 
         self.littlelink_contract_by_creator.remove(&creator_id);

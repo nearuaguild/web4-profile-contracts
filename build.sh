@@ -1,3 +1,4 @@
-RUSTFLAGS='-C link-arg=-s' cargo build --manifest-path=page/Cargo.toml --target wasm32-unknown-unknown --release
+#/bin/sh
+yarn --cwd ./page build:contract
 
-cp ./page/target/wasm32-unknown-unknown/release/near_web4_profile.wasm ./res/contract.wasm
+cp ./page/build/release/web4-profile.wasm ./res/contract.wasm
