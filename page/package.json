@@ -5,6 +5,8 @@
   "license": "MIT",
   "scripts": {
     "build:contract": "asb --verbose --target release && cp ./build/release/web4-profile.wasm ../res/contract.wasm",
+    "predeploy": "yarn build:contract",
+    "deploy": "near deploy --wasmFile build/release/web4-profile.wasm $CONTRACT_NAME"
   },
   "dependencies": {},
   "devDependencies": {
