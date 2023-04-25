@@ -31,20 +31,11 @@ Data is stored on the Near Protocol chain - no one can change it except you once
 
 Please take note that the decision to use AssemblyScript for writing the smart contract was not arbitrary
 
-<style>
-  #compiled_wasm_size_table tr:nth-child(2) {
-    background-color: #069C56AE;
-  }
-</style>
-<div id="compiled_wasm_size_table">
-
 | **Language** | **SDK** | **Minimal WASM size** |
 |:---:|:---:|:---:|
 | Rust | [near-sdk-rs](https://github.com/near/near-sdk-rs) | ~150kb |
 | AssemblyScript | [near-sdk-as](https://github.com/near/near-sdk-as) | ~25kb |
 | JavaScript | [near-sdk-js](https://github.com/near/near-sdk-js) | ~480kb |
-
-</div>
 
 And it comes from the fact that `rust-sdk-as` produces compiled WASM a few times as less as other SDKs
 
@@ -68,9 +59,9 @@ The deployment cost of a smart contract increases in proportion to its size, as 
 Follow these simple instructions to set up a local development environment
 
 1. Clone the repo
-   ```sh
+  ```sh
    git clone https://github.com/nearuaguild/web4-profile-contracts.git
-   ```
+  ```
 2. Open project folder
   ```sh
   cd web4-profile-contracts/page
