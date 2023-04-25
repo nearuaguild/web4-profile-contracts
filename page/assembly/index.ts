@@ -13,13 +13,15 @@ function assertOwner(): void {
   assert(context.sender == get_owner(), "Only owner can call this method");
 }
 
-export function init(data: PageData, ipfs: string, owner_id: string): void {
+export function init(data: PageData, ipfs: string, owner_id?: string): void {
   const initialized: bool = storage.getPrimitive<bool>("init", false);
   assert(!initialized, "Already initialized");
   storage.set<bool>("init", true);
 
+  const owner = owner_id || context.predecessor;
+
   storage.set(WEB4_IPFS, ipfs);
-  storage.set(WEB4_OWNER_ID, owner_id);
+  storage.set(WEB4_OWNER_ID, owner);
   storage.set(PROFILE_DATA, data);
 }
 
