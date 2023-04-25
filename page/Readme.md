@@ -9,9 +9,9 @@
     <br />
     <a href="https://github.com/nearuaguild/near-web4-widgets">Widget to create pages</a>
     ·
-    <a href="https://github.com/nearuaguild"> Explore other examples</a>
+    <a href="https://github.com/nearuaguild"> Explore other projects</a>
     ·
-    <a href="https://github.com/nearuaguild/near-web4-contracts/issues">Report Bug</a>
+    <a href="https://github.com/nearuaguild/near-web4-contracts/issues">Report a bug</a>
   </p>
 </div>
 
