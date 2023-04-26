@@ -7,7 +7,7 @@
     A working Web4 Profile Smart Contract, based on <a href="https://littlelink.io/"> open source self-hosted LittleLink</a>
     <br />
     <br />
-    <a href="https://github.com/nearuaguild/near-web4-widgets">Widget to create pages</a>
+    <a href="https://github.com/nearuaguild/web4-profile-widgets">Widget to create pages</a>
     ·
     <a href="https://github.com/nearuaguild"> Explore other projects</a>
     ·

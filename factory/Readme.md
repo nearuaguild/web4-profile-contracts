@@ -7,7 +7,7 @@
     A working Factory Smart Contract that delivers a fast deployment pipeline based on the <a href="https://github.com/nearuaguild/web4-profile-contracts/tree/main/page"> Web4 site Contract</a> 
     <br />
     <br />
-    <a href="https://github.com/nearuaguild/near-web4-widgets">Widget to create pages</a>
+    <a href="https://github.com/nearuaguild/web4-profile-widgets">Widget to create pages</a>
     ·
     <a href="https://github.com/nearuaguild"> Explore other projects</a>
     ·
