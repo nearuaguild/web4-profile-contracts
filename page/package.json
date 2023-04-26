@@ -4,7 +4,7 @@
   "description": "Self-hosted Linktree alternative to use with web4 on Near Protocol",
   "license": "MIT",
   "scripts": {
-    "build:contract": "asb --verbose --target release && cp ./build/release/web4-profile.wasm ../res/contract.wasm",
+    "build:contract": "asb --verbose --target release",
     "predeploy": "yarn build:contract",
     "deploy": "near deploy --wasmFile build/release/web4-profile.wasm $CONTRACT_NAME"
   },

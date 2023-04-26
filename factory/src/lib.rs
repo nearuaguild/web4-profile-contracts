@@ -145,10 +145,10 @@ impl LittleLinkFactory {
         web4_contract_id: AccountId, 
         attached_deposit: Balance, 
         #[callback_result] create_deploy_result: Result<(), PromiseError>
-    )-> bool {
+    )-> Option<String> {
         if let Ok(_result) = create_deploy_result {
             log!(format!("Correctly created and deployed to {web4_contract_id}"));
-            return true;
+            return Some(web4_contract_id.to_string());
         };
 
         log!(format!(
@@ -159,6 +159,6 @@ impl LittleLinkFactory {
 
         Promise::new(creator_id.to_owned()).transfer(attached_deposit);
 
-        false
+        return None;
     }
 }

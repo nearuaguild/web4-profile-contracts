@@ -1,10 +1,10 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <h2 align="center">Near Protocol | Web4 Profile Contract</h2>
+  <h2 align="center">Near Protocol | Web4 Profiles Factory Contract</h2>
 
   <p align="center">
-    A working Web4 Profile Smart Contract, based on <a href="https://littlelink.io/"> open source self-hosted LittleLink</a>
+    A working Factory Smart Contract that delivers a fast deployment pipeline based on the <a href="https://github.com/nearuaguild/web4-profile-contracts/tree/main/page"> Web4 site Contract</a> 
     <br />
     <br />
     <a href="https://github.com/nearuaguild/near-web4-widgets">Widget to create pages</a>
@@ -19,28 +19,14 @@
 
 ## About The Project
 
-A smart contract built on Near Protocol that allows anyone to deploy their own self-hosted Linktree alternative site that is tied to your `.near` account with the help of [web4](https://github.com/vgrichina/web4)
+A Factory Smart Contract, which takes care of the entire deployment process seamlessly, saving your time
 
-Data is stored on the Near Protocol chain - no one can change it except you once deployed 
+Operates alongside the <a href="https://github.com/nearuaguild/web4-profile-contracts/tree/main/page">Web4 Smart Contract</a> to enhance its deployment speed & convenience
 
 ### Built With
 
-- [![Assembly Script][assemblyscript]][assemblyscript-url]
-- [near-sdk-as (v3.2.3)](https://github.com/near/near-sdk-as)
-- [![Littlelink][littlelink]][littlelink-url]
-
-Please take note that the decision to use AssemblyScript for writing the smart contract was not arbitrary
-
-| **Language** | **SDK** | **Minimal WASM size** |
-|:---:|:---:|:---:|
-| Rust | [near-sdk-rs](https://github.com/near/near-sdk-rs) | ~150kb |
-| AssemblyScript | [near-sdk-as](https://github.com/near/near-sdk-as) | ~25kb |
-| JavaScript | [near-sdk-js](https://github.com/near/near-sdk-js) | ~480kb |
-
-And it comes from the fact that `rust-sdk-as` produces compiled WASM a few times as less as other SDKs
-
-The deployment cost of a smart contract increases in proportion to its size, as more [Gas](https://docs.near.org/concepts/basics/transactions/gas-advanced) is required
-
+- [![Rust][rust]][rust-url]
+- [near-sdk-rs (v4.0.0)](https://github.com/near/near-sdk-rs)
 
 ---
 
@@ -50,9 +36,10 @@ The deployment cost of a smart contract increases in proportion to its size, as 
 
 💡 _Before starting, please ensure that you have all the necessary installations completed_
 
-- [Near CLI](https://docs.near.org/tools/near-cli#setup)
+- [Rust](https://doc.rust-lang.org/cargo/getting-started/installation.html)
+- [Cargo](https://github.com/rust-lang/cargo#compiling-from-source)
 - [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git/)
-- [Yarn](https://classic.yarnpkg.com/en/docs/install)
+- [Near CLI](https://docs.near.org/tools/near-cli#setup)
 
 ### Installation
 
@@ -64,24 +51,46 @@ Follow these simple instructions to set up a local development environment
   ```
 2. Open project folder
   ```sh
-  cd web4-profile-contracts/page
+  cd web4-profile-contracts/factory
   ```
-3. Install dependencies
+3. Compile Smart Contracts
   ```sh
-  yarn
+  ./build.sh
   ```
-4. Create Web4 subaccount (replace `YOUR_ACCOUNT` with your own account name)
+4. Create Factory subaccount (replace `YOUR_ACCOUNT` with your own account name)
   ```sh
-  NODE_ENV=mainnet near create-account web4.YOUR_ACCOUNT.near --masterAccount YOUR_ACCOUNT.near --initialBalance 0.5
+  NODE_ENV=mainnet near create-account page_factory.YOUR_ACCOUNT.near --masterAccount YOUR_ACCOUNT.near --initialBalance 2
   ```
-5. Deploy smart contract
+5. Deploy
   ```sh
-  NODE_ENV=mainnet CONTRACT_NAME=web4.YOUR_ACCOUNT.near yarn deploy
+  NODE_ENV=mainnet near deploy CONTRACT_NAME=page_factory.YOUR_ACCOUNT.near ./target/wasm32-unknown-unknown/release/factory.wasm
   ```
-6. Initialize contract with your data & links (replace `YOUR_ACCOUNT` with your own account name)
+6. Initialize contract
   ```sh
-  NODE_ENV=mainnet near call web4.YOUR_ACCOUNT.near init \
-    '{"data":{"title":"Near Ukraine Guild","description":"Fast-growing guild based in Ukraine, aimed at providing high-quality educational content and assistance to grow a strong community of developers/entrepreneurs/enthusiasts within the Near Protocol ecosystem", "links":[{
+  NODE_ENV=mainnet near call page_factory.YOUR_ACCOUNT.near new '{}' --accountId YOUR_ACCOUNT.near
+  ```
+7. Set IPFS Gateway url for static files from Web4 Profile Contract
+  ```sh
+  NODE_ENV=mainnet near call page_factory.YOUR_ACCOUNT.near set_ipfs '{"ipfs": "ipfs://bafybeihiw6mwe63nvy6it7sialrr3fgx57jqnfdqlpxg7do6fytbxnzmna"}' --accountId YOUR_ACCOUNT.near
+  ```
+8. Store Web4 Profile WASM bytes inside Factory Contract
+  ```sh
+  CONTRACT_BYTES=`cat ./res/contract.wasm | base64`
+  ```
+  ```sh
+  NODE_ENV=mainnet near call page_factory.YOUR_ACCOUNT.near set_code "$CONTRACT_BYTES" --base64 --accountId YOUR_ACCOUNT.near
+  ```
+
+## Usage
+
+You can easily create your site with a single function call
+
+To gain ownership of your created Web4 account, you need to replace `YOUR_PUBLIC_KEY` with your own public key from the FullAccess key pair
+
+For instance, my public key is `ed25519:8W9CiyPPehz2GRW8AYho9nx1z1GLdeZQCyn2wqYgJjiG`
+
+```sh
+NODE_ENV=mainnet near call page_factory.YOUR_ACCOUNT.near create_web4_little_link_page '{"page_data":{"title":"Near Ukraine Guild","description":"Fast-growing guild based in Ukraine, aimed at providing high-quality educational content and assistance to grow a strong community of developers/entrepreneurs/enthusiasts within the Near Protocol ecosystem", "links":[{
       "type": 0,
       "text": "Medium",
       "path": "@nearuaguild"
@@ -97,47 +106,15 @@ Follow these simple instructions to set up a local development environment
       "type": 3,
       "text": "GitHub",
       "path": "nearuaguild"
-    }]}, "ipfs": "ipfs://bafybeihiw6mwe63nvy6it7sialrr3fgx57jqnfdqlpxg7do6fytbxnzmna"}' --accountId  web4.YOUR_ACCOUNT.near
-  ```
-
-## Usage
-
-You can easily access your deployed smart contract at https://YOUR_ACCOUNT.near.page
-
-This is hosted web4 gateway provided to all `.near` accounts
-
-Keep in mind that for now, it's free, but in the future, it might change
-
-## How to Update Profile?
-
-You can easily update your profile information and links at any time with the `set_data` function in the Smart Contract
-
-```sh
-NODE_ENV=mainnet near call web4.YOUR_ACCOUNT.near set_data \
-  '{"data":{"title":"Another Near Ukraine Guild","description":"Another text - Fast-growing guild based in Ukraine, aimed at providing high-quality educational content and assistance to grow a strong community of developers/entrepreneurs/enthusiasts within the Near Protocol ecosystem", "links":[{
-    "type": 0,
-    "text": "Another Medium",
-    "path": "@nearuaguild"
-  },{
-    "type": 1,
-    "text": "Another Twitter",
-    "path": "nearuaguild"
-  },{
-    "type": 2,
-    "text": "Another Telegram",
-    "path": "nearprotocoluachannel"
-  },{
-    "type": 3,
-    "text": "Another GitHub",
-    "path": "nearuaguild"
-  }]}}' --accountId  web4.YOUR_ACCOUNT.near
+    }]}, "pub_key": "YOUR_PUBLIC_KEY"}' --accountId denbite.testnet --deposit 0.7 --gas 300000000000000
 ```
 
-## What's next?
+The function will provide the address of the deployed contract, which will look like `d5f6574f11d34497671dee4e.near`
 
-You may want to consider reviewing the factory smart contract that takes care of deploying pages automatically - more information [here](https://github.com/nearuaguild/web4-profile-contracts/tree/main/factory)
+You can then access the site at https://d5f6574f11d34497671dee4e.near.page by replacing the address with the account that was created for you
 
 ---
+
 ## Developed by
 
 ![Guild cover][cover]
@@ -196,14 +173,15 @@ Join us now to stake and earn 10% APY
 
 ## License
 
-Based on [LittleLink](https://littlelink.io/)
-
 See `LICENSE.txt` for more information
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
 <!-- Built with -->
+
+[rust]: https://img.shields.io/badge/rust-000000?style=for-the-badge&logo=rust&logoColor=white
+[rust-url]: https://www.rust-lang.org/
 
 [javascript]: https://img.shields.io/badge/javascript-000000?style=for-the-badge&logo=javascript&logoColor=F7E018
 [javascript-url]: https://developer.mozilla.org/en-US/docs/Web/JavaScript
